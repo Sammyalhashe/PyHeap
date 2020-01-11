@@ -1,4 +1,4 @@
-from PyHeap.HeapBase import HeapBase
+from PyHeap.HeapBase import HeapBase, either
 
 
 class Heap(HeapBase):
@@ -25,7 +25,26 @@ class Heap(HeapBase):
             function should access those values within the object
             (default: {None})
         """
-        super().__init__(arr, isMin, key)  # for multi-inheritance
+        super().__init__(isMin, key)  # for multi-inheritance
+        if not arr:
+            self.heap = [0]
+        else:
+            self.buildHeap(arr, key)
+
+    def __getitem__(self, i):
+        n = len(self)
+        if n == 0 or either(0, i)(lambda x: x >= n):
+            raise IndexError(
+                "{0} is not in range for list of length {1}".format(i, n))
+        heapCopy = self.heap[:]
+        currSize = self.current_size
+        j = 0
+        while j <= i:
+            val = self.deleteMin()
+            j += 1
+        self.heap = heapCopy
+        self.current_size = currSize
+        return val
 
     @property
     def key(self):
@@ -37,6 +56,10 @@ class Heap(HeapBase):
             self._key = lambda x: x  # identity function
         else:
             self._key = key
+
+    def swapOrientation(self):
+        newHeap = Heap(arr=self.heap[1:], isMin=not self.isMin, key=self.key)
+        return newHeap
 
     def insert(self, value):
         """[inserts a value into the heap]
@@ -69,20 +92,21 @@ class Heap(HeapBase):
                 index = i
                 break
 
-        if index < 0:
-            return
+        if either(0, index)(lambda x: x < 0):
+            raise IndexError("Index cannot be less than 0")
         try:
             if index != self.current_size + 1:
                 self.swap(index, self.current_size)
                 self.current_size -= 1
-                self.heap.pop()
-                if self.heap[index] < self.heap[index // 2]:
+                val = self.heap.pop()
+                if self.ordering(self.heap[index], self.heap[index // 2]):
                     self.bubbleUp(index)
                 else:
                     self.bubbleDown(index)
+                return val
             else:
                 self.current_size -= 1
-                self.heap.pop()
+                return self.heap.pop()
 
         except NameError as e:
             print("Value not in heap, NameError:", e)
@@ -120,6 +144,11 @@ class Heap(HeapBase):
                 index = index // 2
             else:
                 break
+
+    def getMin(self):
+        if len(self) == 0:
+            raise IndexError("The heap is empty")
+        return self.heap[1]
 
     def deleteMin(self):
         """[deletes minimum element from the heap -> the root]
@@ -201,6 +230,8 @@ class Heap(HeapBase):
         """
         if key:
             self.key = key
+        if isinstance(array, set):
+            array = list(array)
         index = len(array) // 2
         self.current_size = len(array)
         self.heap = [0] + array
@@ -231,7 +262,7 @@ class Heap(HeapBase):
             self.swap(index, smallest)
             self.satisfyMinHeapProperty(smallest, current_size)
 
-    def HeapSort(self, reverse=True):
+    def HeapSort(self, reverse=False):
         """
         @brief      { sorts using heapsort algo }
 
@@ -251,7 +282,7 @@ class Heap(HeapBase):
             self.satisfyMinHeapProperty(1, current_size)
         # restore the object heap
         self.buildHeap(sorted_arr, self.key)
-        return (sorted_arr if reverse else sorted_arr[::-1])
+        return (sorted_arr if not reverse else sorted_arr[::-1])
 
     def reconstructHeap(self, key):
         self.key = key

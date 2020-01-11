@@ -1,6 +1,10 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
+def either(v1, v2):
+    return lambda op: op(v1) or op(v2)
+
+
 class HeapBase(object):
     __metaclass__ = ABCMeta
     """Heap:
@@ -12,7 +16,7 @@ class HeapBase(object):
     Also stores a current_size that is initialized at 0
     """
 
-    def __init__(self, arr=None, isMin=True, key=None):
+    def __init__(self, isMin=True, key=None):
         """constructor for heap
 
         Initializes the heap with [0] and the current_size at 0
@@ -30,31 +34,40 @@ class HeapBase(object):
         self.current_size = 0
         self.key = key
         self.isMin = isMin
-        if not arr:
-            self.heap = [0]
-        else:
-            self.buildHeap(arr, key)
+        self.heap = [0]
 
     def __str__(self):
         return self.tree()
 
+    def __len__(self):
+        return len(self.heap) - 1
+
+    def __iter__(self):
+        heapCopy = self.heap[:]
+        currSize = self.current_size
+        while len(self.heap) > 1:
+            yield self.deleteMin()
+        self.heap = heapCopy
+        self.current_size = currSize
+
     def tree(self):
-        sHeap = list(map(lambda c: str(c), self.heap))
-        longest = max(list(map(lambda y: len(y), sHeap)))
         n = len(self.heap)
         res = ""
-        current_level = [1]
-        gap = longest * ' '
-        while current_level:
-            res += gap.join(
-                str(self.applyKey(self.heap[x])) for x in current_level) + "\n"
-            next_level = []
-            for node in current_level:
-                if 2 * node < n:
-                    next_level.append(2 * node)
-                if 2 * node + 1 < n:
-                    next_level.append(2 * node + 1)
-            current_level = next_level
+        if n > 1:
+            sHeap = list(map(lambda c: str(c), self.heap))
+            longest = max(list(map(lambda y: len(y), sHeap)))
+            current_level = [1]
+            gap = longest * ' '
+            while current_level:
+                res += gap.join(str(self.heap[x])
+                                for x in current_level) + "\n"
+                next_level = []
+                for node in current_level:
+                    if 2 * node < n:
+                        next_level.append(2 * node)
+                    if 2 * node + 1 < n:
+                        next_level.append(2 * node + 1)
+                current_level = next_level
         return res
 
     @abstractproperty
@@ -81,7 +94,10 @@ class HeapBase(object):
         return
 
     def applyKey(self, val):
-        return self.key(val)
+        try:
+            return self.key(val)
+        except ValueError as e:
+            print(e)
 
     def ordering(self, v1, v2):
         """ordering operator for heap
@@ -90,6 +106,10 @@ class HeapBase(object):
         if self.isMin:
             return v1 < v2
         return v1 > v2
+
+    @abstractmethod
+    def swapOrientation(self):
+        pass
 
     @abstractmethod
     def insert(self, value):
@@ -113,6 +133,9 @@ class HeapBase(object):
             i1 {int} -- [index of first element]
             i2 {int} -- [index of second element]
         """
+        n = len(self.heap)
+        if max(i1, i2) >= n or either(i1, i2)(lambda x: x < 0):
+            raise IndexError("Indices cannot be greater that len(heap) or <0")
         temp = self.heap[i1]
         self.heap[i1] = self.heap[i2]
         self.heap[i2] = temp
@@ -122,7 +145,7 @@ class HeapBase(object):
         """
         restores min heap property (use only for insert)
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def bubbleUp(self, index):
@@ -137,8 +160,11 @@ class HeapBase(object):
         Arguments:
             index {int} -- [index where you want the value bubbled up]
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
+    @abstractmethod
+    def getMin(self):
+        raise NotImplementedError("Method has not been implemented")
     @abstractmethod
     def deleteMin(self):
         """[deletes minimum element from the heap -> the root]
@@ -148,7 +174,7 @@ class HeapBase(object):
         Returns:
             [int] -- [value deleted from heap]
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def deleteMax(self):
@@ -159,7 +185,7 @@ class HeapBase(object):
         Returns:
             [int] -- [value deleted from heap]
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def bubbleDown(self, i):
@@ -174,7 +200,7 @@ class HeapBase(object):
         Arguments:
             i {int} -- [index to start bubbling down]
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def getSmallestChild(self, i):
@@ -194,7 +220,7 @@ class HeapBase(object):
         Returns:
             number -- [index of smallest of the three -> could be parent]
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def getLargestChild(self, i):
@@ -214,7 +240,7 @@ class HeapBase(object):
         Returns:
             number -- [index of smallest of the three -> could be parent]
         """
-        return
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def buildHeap(self, array, key=None):
@@ -226,13 +252,7 @@ class HeapBase(object):
 
         @return     The heap.
         """
-        self.key = key
-        index = len(array) // 2
-        self.current_size = len(array)
-        self.heap = [0] + array
-        while (index > 0):
-            self.bubbleDown(index)
-            index -= 1
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def satisfyMinHeapProperty(self, index, current_size):
@@ -245,7 +265,7 @@ class HeapBase(object):
 
         @return     { no return val; alters self.heap }
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def satisfyMaxHeapProperty(self, index, current_size):
@@ -258,7 +278,7 @@ class HeapBase(object):
 
         @return     { no return val; alters self.heap }
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
 
     @abstractmethod
     def HeapSort(self, reverse=True):
@@ -270,7 +290,9 @@ class HeapBase(object):
 
         @return     { sorted array }
         """
-        return
+        # return None instead of an error as this method should not
+        # be necessary
+        return None
 
     @abstractmethod
     def reconstructHeap(self, key):
@@ -285,4 +307,4 @@ class HeapBase(object):
             [function that returns a value that is the basis for how the heap
             is built]
         """
-        pass
+        raise NotImplementedError("Method has not been implemented")
