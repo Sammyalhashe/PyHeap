@@ -1,1 +1,1 @@
-python3 setup.py sdist bdist_wheel
+`which python` setup.py sdist bdist_wheel
