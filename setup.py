@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyHeap",
-    version="0.0.3",
+    version="0.0.4",
     author="Sammyalhashe",
     author_email="sammy.alhashemi@mail.utoronto.ca",
     description="A small heap implementation with customizeable key",

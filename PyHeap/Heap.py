@@ -53,9 +53,29 @@ class Heap(HeapBase):
     @key.setter
     def key(self, key):
         if key is None:
-            self._key = lambda x: x  # identity function
+            self._key = self._genericKey
         else:
             self._key = key
+
+    def _genericKey(self, val):
+        """_genericKey.
+        This method is used as the key when the user does not pass is a key.
+        Right now:
+            - If the value is something that can be ordered easily
+            (int, char, str), I just use the identity function.
+            - If it is an iterable, I check the first value of the iterable.
+            I believe heapq uses this behaviour.
+
+
+        :param val: the value to generate a key for
+        """
+        if hasattr(val, '__getitem__'):
+            return val[0]
+        elif isinstance(val, (int, float, str)):
+            return val  # identity function
+        raise TypeError(
+            "Object is not comparable or indexable. Please define your own key"
+        )
 
     def swapOrientation(self):
         newHeap = Heap(arr=self.heap[1:], isMin=not self.isMin, key=self.key)

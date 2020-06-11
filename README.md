@@ -49,7 +49,8 @@ The heap can also be indexed:
 
 Finally, the heap supports adding any kind of type, as long as you provide a `key` that provides a method of ordering values.
 
-- NOTE: by default, the key is an indentity function
+- NOTE: by default, the key is an indentity function if the object is not indexable.
+- Otherwise, it is the first element of an object. For example x[0] for a list x.
 - If the key fails on an item, it will raise a `ValueError`
 
 ```python
